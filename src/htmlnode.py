@@ -1,8 +1,6 @@
-DEBUG=False
+import logr
 
-def log(msg):
-
-    DEBUG and print(f"[DEBUG] {msg}")
+#logr.DEBUG=True
 
 
 class HTMLNode():
@@ -57,7 +55,7 @@ class LeafNode(HTMLNode):
 
         final_html = f"{tag_start}{tag_close}"
 
-        log(f"LeafNode: to_html() return: {final_html}")
+        logr.log(f"LeafNode.to_html(): return: {final_html}")
         return final_html
 
     def __repr__(self):
@@ -82,11 +80,11 @@ class ParentNode(HTMLNode):
         props_str = self.props_to_html()
         final_html = f"<{self.tag}{props_str}>"
         for child in self.children:
-            log(f"calling child {child}")
+            logr.log(f"ParentNode.to_html(): calling child {child}")
             final_html += child.to_html()
 
         final_html += f"</{self.tag}>" 
-        log(f"ParentNode: to_html() return: {final_html}")
+        logr.log(f"ParentNode.to_html(): return: {final_html}")
         return final_html
 
 
