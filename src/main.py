@@ -4,6 +4,7 @@ from mdparse import *
 from md2html import *
 from os import listdir, path, mkdir, makedirs
 from shutil import copy, rmtree
+from sys import argv
 import logr
 
 #logr.DEBUG=True
@@ -58,7 +59,7 @@ def extract_title(markdown):
 
     raise Exception("title block not found")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
@@ -74,10 +75,16 @@ def generate_page(from_path, template_path, dest_path):
 
     html_content = ""
     for block in markdown_to_blocks(md_file):
-        logr.log(f"generate_page(): block {block} to be converted to html...")
+        b_type = block_to_block_type(block)
+        logr.log(f"generate_page(): b_type: {b_type}, block: {block} to be converted to html...")
 
         block_as_html = markdown_to_html_node(block).to_html()
+        if b_type != BlockType.CODE:
+            # replace all root basepath '/' with optional basepath whose default is '/' for href and src
+            block_as_html = re.sub("(href|src)=\"/", r'\1="{}'.format(basepath), block_as_html)
+
         logr.log(f"generate_page(): appending block as html {block_as_html} to html_content...")
+
         html_content += block_as_html
 
     logr.log(f"replacing title: {html_title} in template")
@@ -100,7 +107,7 @@ def write_file(dest_path, file_contents):
         f_out.write(file_contents)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     logr.log(f"generate_pages_recursive: dir_path_content: \"{dir_path_content}\", template_path: \"{template_path}\", dest_dir_path: \"{dest_dir_path}\"")
 
     # Open dir_path_content to get dirs in dir_path_content
@@ -113,7 +120,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
         # For each markdown file in dir_path_content, generate html beneath dest_dir_path
         if path.isfile(src_file) and src_file.endswith(".md"):
             logr.log(f"generate_pages_recursive: generating \"{src_file}\" to \"{dst_file}\"")
-            generate_page(src_file, template_path, dst_file[:-3] + ".html" )
+            generate_page(src_file, template_path, dst_file[:-3] + ".html", basepath)
         elif path.isdir(src_file):
             # remove target prior to re-generating
             if path.isdir(dst_file):
@@ -125,7 +132,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
 
             # For each dir file in dir_path_content, copy to dest then recurse
             logr.log(f"generate_pages_recursive: recursive call for source directory \"{file}\"")
-            generate_pages_recursive(src_file, template_path, dst_file)
+            generate_pages_recursive(src_file, template_path, dst_file, basepath)
 
 
 def main():
@@ -140,9 +147,18 @@ def main():
 
     print(f"props for our node look like: |{html_a_example.props_to_html()}|")
 
-    copy_dir("./static", "./public", delete_dest=True)
 
-    #generate_page("./content/index.md", "./template.html", "./public/index.html")
-    generate_pages_recursive("./content", "./template.html", "./public")
+    # if we have a command line arg, assume it is basepath for our web site anchor links:
+    basepath = '/'
+    target_dir = './docs'
+    print(f"argv 1 will be used as basepath if provided: {argv} <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    if len(argv) == 2:
+        basepath = argv[1]
+    if len(argv) == 3:
+        target_dir = argv[2]
+
+    copy_dir("./static", target_dir, delete_dest=True)
+
+    generate_pages_recursive("./content", "./template.html", target_dir, basepath)
 
 main()
