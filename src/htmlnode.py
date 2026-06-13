@@ -1,5 +1,6 @@
 import logr
 
+logr.DEBUG=False
 #logr.DEBUG=True
 
 
