@@ -6,6 +6,7 @@ import logr
 import re
 
 #logr.DEBUG=True
+logr.DEBUG=False
 
 def markdown_to_html_node(markdown):
     p_children = []
@@ -19,15 +20,15 @@ def markdown_to_html_node(markdown):
         b_type = block_to_block_type(block)
         logr.log(f"markdown_to_html_node: block type determined as: {b_type}")
 
-        stripped_block = block
+        stripped_block = ""
 
-        #if b_type != BlockType.CODE:
-        #    stripped_block = " ".join(block.split())
+        if b_type != BlockType.CODE:
+            stripped_block = " ".join(block.split())
 
         if b_type == BlockType.CODE:
             p_children.append(code_block_to_html_node(block))
         elif b_type == BlockType.PARAGRAPH:
-            para_node = create_para_node(block)
+            para_node = create_para_node(stripped_block)
             logr.log(f"markdown_to_html_node: appending to p_children; para_node: {para_node}")
             p_children.append(para_node)
         elif b_type == BlockType.HEADING:
@@ -38,16 +39,13 @@ def markdown_to_html_node(markdown):
             p_children.append(header)
         elif b_type == BlockType.QUOTE:
             logr.log(f"markdown_to_html_node: handling creating of blockquote")
-            stripped_block = re.sub(r"^>\s*", '', block, flags=re.MULTILINE)
-            bquote = LeafNode(tag="blockquote", value=stripped_block)
+            filtered_block = re.sub(r"^>\s*", '', block, flags=re.MULTILINE)
+            bquote = LeafNode(tag="blockquote", value=filtered_block)
             p_children.append(bquote)
         elif b_type == BlockType.UNORDERED_LIST or b_type == BlockType.ORDERED_LIST:
             list_node = generate_html_list(block)
             p_children.append(list_node)
         else:
-            #child_nodes = generate_html_children(stripped_block)
-            #p_children.extend(child_nodes)
-            stripped_block = " ".join(block.split())
             child_nodes = generate_html_children(stripped_block)
             para_with_childs = ParentNode(tag="p", children=child_nodes)
             p_children.append(para_with_childs)
@@ -68,9 +66,7 @@ def generate_html_list(md_block):
 
     l_items = []
     for line in md_block.split("\n"):
-        #l_item = LeafNode(tag="li", value=line)
-        #l_items.append( l_item )
-        stripped_line = re.sub(r"^(-|\d+\.)\s*", '', line, flags=re.MULTILINE)
+        stripped_line = re.sub(r"^(-|\d+\.)\s+", '', line, flags=re.MULTILINE)
         child_nodes = generate_html_children(stripped_line)
         l_item = ParentNode(tag="li", children=child_nodes)
         l_items.append( l_item )
