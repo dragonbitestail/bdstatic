@@ -151,14 +151,15 @@ def main():
     # if we have a command line arg, assume it is basepath for our web site anchor links:
     basepath = '/'
     target_dir = './docs'
-    print(f"argv 1 will be used as basepath if provided: {argv} <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     if len(argv) == 2:
         basepath = argv[1]
     if len(argv) == 3:
+        basepath = argv[1]
         target_dir = argv[2]
 
     copy_dir("./static", target_dir, delete_dest=True)
 
+    print(f"target_dir: {target_dir} with basepath: {basepath} for href & src tags <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     generate_pages_recursive("./content", "./template.html", target_dir, basepath)
 
 main()
