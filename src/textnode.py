@@ -1,5 +1,8 @@
 from enum import Enum
 from htmlnode import LeafNode
+import logr
+
+logr.DEBUG=False
 
 class TextType(Enum):
     TEXT = "text"
@@ -35,6 +38,7 @@ class TextNode:
 
 
 def text_node_to_html_node(text_node: TextNode) -> LeafNode:
+    logr.log(f"text_node_to_html_node(): IN: \"{text_node}\"")
     match text_node.text_type:
         case TextType.TEXT:
             return LeafNode(None, text_node.text)
