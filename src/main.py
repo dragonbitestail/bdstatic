@@ -7,8 +7,9 @@ from shutil import copy, rmtree
 import logr
 
 #logr.DEBUG=True
+logr.DEBUG=False
 
-def purge_dir(dir_path: str, recreate_dir: bool):
+def purge_dir(dir_path: str, recreate_dir: bool=False):
     if path.isdir(dir_path):
         logr.log(f"purge_dir: removing dir_path: {dir_path}")
         rmtree(dir_path)
@@ -99,6 +100,34 @@ def write_file(dest_path, file_contents):
         f_out.write(file_contents)
 
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    logr.log(f"generate_pages_recursive: dir_path_content: \"{dir_path_content}\", template_path: \"{template_path}\", dest_dir_path: \"{dest_dir_path}\"")
+
+    # Open dir_path_content to get dirs in dir_path_content
+    for file in listdir(dir_path_content):
+        logr.log(f"generate_pages_recursive: eval'ing file: \"{file}\" in \"{dir_path_content}\"")
+        # construct full path to src file and dest file relative to dest_dir_path
+        src_file = path.join(dir_path_content, file)
+        dst_file = path.join(dest_dir_path, file)
+
+        # For each markdown file in dir_path_content, generate html beneath dest_dir_path
+        if path.isfile(src_file) and src_file.endswith(".md"):
+            logr.log(f"generate_pages_recursive: generating \"{src_file}\" to \"{dst_file}\"")
+            generate_page(src_file, template_path, dst_file[:-3] + ".html" )
+        elif path.isdir(src_file):
+            # remove target prior to re-generating
+            if path.isdir(dst_file):
+                purge_dir(dst_file, recreate_dir=True)
+            elif not path.exists(dst_file):
+                logr.log(f"generate_pages_recursive: MKDIR-MKDIR-MKDIR-MKDIR-MKDIR creating dir \"{dest_dir_path}\" for \"{dst_file}\" to live in...")
+                mkdir(dst_file)
+
+
+            # For each dir file in dir_path_content, copy to dest then recurse
+            logr.log(f"generate_pages_recursive: recursive call for source directory \"{file}\"")
+            generate_pages_recursive(src_file, template_path, dst_file)
+
+
 def main():
 
     t_type = TextType
@@ -113,6 +142,7 @@ def main():
 
     copy_dir("./static", "./public", delete_dest=True)
 
-    generate_page("./content/index.md", "./template.html", "./public/index.html")
+    #generate_page("./content/index.md", "./template.html", "./public/index.html")
+    generate_pages_recursive("./content", "./template.html", "./public")
 
 main()
