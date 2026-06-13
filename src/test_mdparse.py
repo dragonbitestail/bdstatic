@@ -19,6 +19,11 @@ class TestTextParse(unittest.TestCase):
         self.assertEqual(tuple_matches[0][0], "rick roll")
         self.assertEqual(tuple_matches[1][1], "https://i.imgur.com/fJRm4Vk.jpeg")
 
+
+        text_no_image_link = "This is text with ending punctuation! It should not produce a link!"
+        matches = extract_markdown_images(text_no_image_link)
+        self.assertEqual(matches, [])
+
     def test_extract_md_links(self):
         text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
         tuple_matches = extract_markdown_links(text)
