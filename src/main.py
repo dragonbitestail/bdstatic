@@ -72,6 +72,7 @@ def generate_page(from_path, template_path, dest_path, basepath):
 
     with open(template_path, "r") as r_file:
         template_file = r_file.read()
+        template_file = re.sub("(href|src)=\"/", r'\1="{}'.format(basepath), template_file)
 
     html_content = ""
     for block in markdown_to_blocks(md_file):
